@@ -26,7 +26,6 @@ public class HueLighting : ModuleRules
 			new string[]
 			{
 				"Core",
-				"Core",
 				"HTTP", 
 				"Json", 
 				"JsonUtilities", 

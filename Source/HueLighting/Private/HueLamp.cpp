@@ -29,7 +29,7 @@ void AHueLamp::BeginPlay()
 
 /**
  * @brief 
- * Converts RGB over int HSV Format for Hue lights
+ * Converts RGB over int HSV Format for Hue lights :: Internal Call
  * Bri has a max value of 254
  * Hue has a max value of 65535
  * Sat has a max value of 254
@@ -78,6 +78,7 @@ FVector AHueLamp::CovertRGBToHSV(const FColor &RGB)
 	return  FVector(Hue, Saturation, Brightness);;
 }
 
+//Create Hue Light Lamp Brightness request  :: Internal Call
 void AHueLamp::CreateRequestBrightness(int32 Bri)
 {
 	//if Bri is set to 0 light is off, and set data to be turn off only to save payload size
@@ -109,7 +110,7 @@ void AHueLamp::CreateRequestBrightness(int32 Bri)
 	
 	bInUse = false;
 }
-
+//Create Hue Light Lamp Color request with HSV format :: Internal Call
 void AHueLamp::CreateRequestColor(const FVector& HSV)
 {
 	//if Bri is set to 0 light is off, and set data to be turn off only to save payload size
@@ -144,7 +145,7 @@ void AHueLamp::CreateRequestColor(const FVector& HSV)
 	
 	bInUse = false;
 }
-
+//Create Hue Light Lamp On/Off request :: Internal Call
 void AHueLamp::CreateRequestTurnLightOnOff(bool bTurnOn)
 {
 	//Setup HTTP REST CALL  
@@ -184,6 +185,7 @@ void AHueLamp::Tick(float DeltaTime)
 
 }
 
+//Setup Hue Lamp Settings Path, Key, and device name
 void AHueLamp::SetupLamp(const FString& Path, const FString& Key,const FString &Name)
 {
 	DevicePath = Path;
@@ -192,6 +194,7 @@ void AHueLamp::SetupLamp(const FString& Path, const FString& Key,const FString &
 	bHasBeenConfigured =true;
 }
 
+//Turn lamp on or off
 void AHueLamp::TurnLightOnOff(bool bTurnOn)
 {
 	if(CheckInUse())
@@ -201,6 +204,7 @@ void AHueLamp::TurnLightOnOff(bool bTurnOn)
 	CreateRequestTurnLightOnOff(bTurnOn);
 }
 
+//set lamp color with FColor Gets converted to HSV
 void AHueLamp::SetColor(const FColor &Color)
 {
 	if(CheckInUse())
@@ -210,6 +214,7 @@ void AHueLamp::SetColor(const FColor &Color)
 	CreateRequestColor(CovertRGBToHSV(Color));
 }
 
+//set lamp Brightness
 void AHueLamp::SetBrightness(const int32 Brightness)
 {
 	if(CheckInUse())
@@ -219,6 +224,7 @@ void AHueLamp::SetBrightness(const int32 Brightness)
 	CreateRequestBrightness(Brightness);
 }
 
+//Check to see if we are using lamp to prevent a flood of requests
 bool AHueLamp::CheckInUse()
 {
 	if(bInUse)

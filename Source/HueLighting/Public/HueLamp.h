@@ -67,7 +67,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Hue Light")
 		virtual void SetBrightness(const int32 Brightness);
 	
-	UFUNCTION(BlueprintCallable, Category = "Hue Light")
+	UFUNCTION(BlueprintCallable, Category = "Hue Light" )
 		virtual	void UseLampLight(bool bUse) {bUseLamp = bUse;};
 	
 	UFUNCTION(BlueprintPure, Category = "Hue Light")
