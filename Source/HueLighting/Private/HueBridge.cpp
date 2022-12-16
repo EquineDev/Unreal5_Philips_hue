@@ -283,7 +283,7 @@ void AHueBridge::DiscoverLamps()
 
 	//Fill out JSON DATA
 	TSharedRef<FJsonObject> RequestOBJ = MakeShared<FJsonObject>();
-	RequestOBJ->SetStringField(TEXT("devicetype"), HueBridgeConfig.AppName);
+	//RequestOBJ->SetStringField(TEXT("devicetype"), HueBridgeConfig.AppName);
 
 	//Serialize Data
 	FString RequestBody;
@@ -293,7 +293,7 @@ void AHueBridge::DiscoverLamps()
 	Request->SetURL(URL);
 	Request->SetVerb(VERB_GET);
 	Request->SetHeader("Content-Type", TEXT("application/json"));
-	Request->SetContentAsString(RequestBody);
+	//Request->SetContentAsString(RequestBody);
 	Request->ProcessRequest();
 	bInUse = true;
 }
