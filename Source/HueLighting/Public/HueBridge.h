@@ -15,6 +15,7 @@ Copyright (c) 2022 Scott Tongue all rights reversed
 
 class FHttpModule;
 
+
 USTRUCT()
 struct FLightInfo
 {
@@ -78,7 +79,7 @@ protected:
 	FTimerHandle LinkBridgeTimer;
 	bool bUserExist = false;
 
-	UPROPERTY(BlueprintGetter = BridgeInUse )
+	UPROPERTY(BlueprintGetter = BridgeInUse, Category = "Hue Bridge Config")
 		bool bInUse = false;
 	
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Hue Bridge Config")

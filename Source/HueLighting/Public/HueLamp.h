@@ -27,16 +27,16 @@ protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 	
-	UPROPERTY(BlueprintGetter = CheckInUse)
+	UPROPERTY(BlueprintGetter = CheckInUse, Category = "Hue Light")
 		bool bUseLamp = true;
 	
-	UPROPERTY(BlueprintGetter = LampToBeUsed)
+	UPROPERTY(BlueprintGetter = LampToBeUsed, Category = "Hue Light")
 		bool bInUse = false;
 	
-	UPROPERTY(BlueprintGetter = HasLampBeenConfigured)
+	UPROPERTY(BlueprintGetter = HasLampBeenConfigured, Category = "Hue Light")
 		bool bHasBeenConfigured = false;
 	
-	UPROPERTY(BlueprintGetter = GetLampName)
+	UPROPERTY(BlueprintGetter = GetLampName, Category = "Hue Light")
 		FString LampName;
 	
 	FString DevicePath;

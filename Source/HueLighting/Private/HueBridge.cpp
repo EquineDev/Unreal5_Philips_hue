@@ -1,6 +1,6 @@
 /*
 MIT License Modified See LICENSE Files for more details
-Copyright (c) 2022 Scott Tongue all rights reversed
+Copyright (c) 2022 Scott Tongue all rights reversed 
 */
 
 #include "HueBridge.h"
@@ -11,7 +11,7 @@ Copyright (c) 2022 Scott Tongue all rights reversed
 #include "Misc/FileHelper.h"
 
 //const FSTRING names 
-const static FString CONFIG_FILE = TEXT("/Config/HueConfig.json");
+const static FString CONFIG_FILE= TEXT("/Config/HueConfig.json");
 const static FString VERB_GET = TEXT("GET");
 const static FString VERB_POST = TEXT("POST");
 const static FString TYPE = TEXT("type");
@@ -21,7 +21,7 @@ const static FString NAME = TEXT("name");
 // Sets default values
 AHueBridge::AHueBridge()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
+ 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
 }
@@ -30,7 +30,7 @@ AHueBridge::AHueBridge()
 void AHueBridge::BeginPlay()
 {
 	Super::BeginPlay();
-
+	
 }
 
 
@@ -44,17 +44,17 @@ void AHueBridge::Tick(float DeltaTime)
 
 /**
  * @brief Callback for HUE API Response for discover of all lights connected to the Hue Bridge
- * @param Request Signature for callback
- * @param Response Signature for callback
- * @param bWasSuccessful  Signature for callback
+ * @param Request Signature for callback 
+ * @param Response Signature for callback 
+ * @param bWasSuccessful  Signature for callback 
  */
 void AHueBridge::OnResponseReceivedDiscover(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	//Get Respond as string of data and if there is any Error in the string break out early
-	const FString Data = Response->GetContentAsString();
-	if (Data.Contains(TEXT("Error")))
+	const FString Data  = Response->GetContentAsString();
+	if(Data.Contains(TEXT("Error")))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *Data);
+		UE_LOG(LogTemp, Warning, TEXT("%s"),*Data);
 		UE_LOG(LogTemp, Warning, TEXT("USER DOES NOT EXIST!"));
 		bInUse = false;
 		UserConfiguredCorrectly(false);
@@ -65,7 +65,7 @@ void AHueBridge::OnResponseReceivedDiscover(FHttpRequestPtr Request, FHttpRespon
 	TSharedPtr<FJsonObject> ResponseObj;
 	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Data);
 
-	if (!FJsonSerializer::Deserialize(JsonReader, ResponseObj))
+	if(! FJsonSerializer::Deserialize(JsonReader, ResponseObj))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FAILED TO Deserialize Find Lights Responds"));
 	}
@@ -73,10 +73,10 @@ void AHueBridge::OnResponseReceivedDiscover(FHttpRequestPtr Request, FHttpRespon
 	{
 		//Setup a Tmap of all keys and Json data
 		TMap<FString, TSharedPtr<FJsonValue>> JsonValues = ResponseObj->Values;
-
+	
 		int32 KeyCounter = 1;
 		//Setup URL path for Device; 
-		const FString URL = TEXT("http://") +
+		const FString URL = TEXT("http://")+
 			HueBridgeConfig.HostName +
 			TEXT("/api/") + HueBridgeConfig.UserName +
 			TEXT("/lights");
@@ -89,27 +89,27 @@ void AHueBridge::OnResponseReceivedDiscover(FHttpRequestPtr Request, FHttpRespon
 			const TSharedPtr<FJsonValue> FieldValue = Element.Value;
 
 			//Check if the field is Lamp
-			if (FieldName.Compare(TYPE))
+			if(FieldName.Compare(TYPE))
 			{
 				//Complete URL path to hue bridge for hue lamp
 				Device = URL + TEXT("/") + FString::FromInt(KeyCounter) + STATE;
-				UE_LOG(LogTemp, Warning, TEXT("%s"), *Device);
+				UE_LOG(LogTemp,Warning, TEXT("%s"), *Device);
 			}
 			//Setup the Name of the Lamp
-			if (FieldName.Compare(NAME))
+			if(FieldName.Compare(NAME))
 			{
 				FString LampName;
-				GetStringName(FieldValue->AsObject(), NAME, LampName);
+				GetStringName(FieldValue->AsObject(),NAME, LampName);
 				TObjectPtr<AHueLamp> Lamp = GetWorld()->SpawnActor<AHueLamp>();
 				Lamp->SetupLamp(Device, FString::FromInt(KeyCounter), LampName);
 				HueLamps.Add(LampName, Lamp);
-				UE_LOG(LogTemp, Warning, TEXT("%s"), *LampName);
+				UE_LOG(LogTemp,Warning, TEXT("%s"), *LampName);
 				KeyCounter++;
 			}
-
+		
 		}
 	}
-
+	
 	bInUse = false;
 	FoundDiscoverableLights.Broadcast();
 }
@@ -117,30 +117,40 @@ void AHueBridge::OnResponseReceivedDiscover(FHttpRequestPtr Request, FHttpRespon
 
 /**
  * @brief Callback for HUE API Response for New user Setup
- * @param Request Signature for callback
- * @param Response Signature for callback
- * @param bWasSuccessful Signature for callback
+ * @param Request Signature for callback 
+ * @param Response Signature for callback 
+ * @param bWasSuccessful Signature for callback 
  */
 void AHueBridge::OnResponseReceivedNewUser(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	//Get Respond as string of data and if there is any Error in the string break out early
-	const FString Data = Response->GetContentAsString();
-	if (Data.Contains(TEXT("Error")))
+	FString Data = Response->GetContentAsString();
+	if(Data.Contains(TEXT("Error")))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("%s"), *Data);
+		UE_LOG(LogTemp, Warning, TEXT("%s"),*Data);
 		UE_LOG(LogTemp, Warning, TEXT("USER DOES NOT EXIST!"));
 		bInUse = false;
 		UserConfiguredCorrectly(false);
 		return;
 	}
 
-	//Deserilize the Json object 
-	TSharedPtr<FJsonObject> ResponseObj;
-	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Data);
+	int32 index = Data.Find(USERNAME)+11;
+	Data = Data.RightChop(index);
+	Data = Data.LeftChop(4);
+	HueBridgeConfig.UserName = Data;
+	UE_LOG(LogTemp, Warning, TEXT("USER: %s Created"), *HueBridgeConfig.UserName);
+	bInUse = false;
+	UserConfiguredCorrectly(true);
+	//Deserilize the Json object JSON OBJECT FAIL TO Deserialize so chopping the string instead
+	
 
-	if (!FJsonSerializer::Deserialize(JsonReader, ResponseObj))
+	/*TSharedPtr<FJsonObject> ResponseObj = MakeShareable(new FJsonObject);
+//	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+	
+	if(! FJsonSerializer::Deserialize(JsonReader, ResponseObj))
 	{
 		UE_LOG(LogTemp, Warning, TEXT("FAILED TO Deserialize NEWUSER RESPOND!"));
+		
 	}
 	else
 	{
@@ -153,10 +163,10 @@ void AHueBridge::OnResponseReceivedNewUser(FHttpRequestPtr Request, FHttpRespons
 			const TSharedPtr<FJsonValue> FieldValue = Element.Value;
 
 			//Find our Username field and setup the user name properly 
-			if (FieldName.Compare(USERNAME))
+			if(FieldName.Compare(USERNAME))
 			{
 				FString UserName;
-				GetStringName(FieldValue->AsObject(), USERNAME, UserName);
+				GetStringName(FieldValue->AsObject(),USERNAME, UserName);
 				HueBridgeConfig.UserName = UserName;
 				UE_LOG(LogTemp, Warning, TEXT("USER: %s Created"), *HueBridgeConfig.UserName);
 				bInUse = false;
@@ -165,32 +175,34 @@ void AHueBridge::OnResponseReceivedNewUser(FHttpRequestPtr Request, FHttpRespons
 			}
 		}
 	}
-
-
-
-
-	/*	 if(FString UserName; ResponseObj->TryGetStringField(USERNAME,UserName ))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("FOUND:: %s"),*UserName)
-			HueBridgeConfig.UserName = UserName;
-
-		} */
-
 	UE_LOG(LogTemp, Warning, TEXT(" User Couldnt be Created please press link on Hue Hub!!"));
 	bInUse = false;
 	UserConfiguredCorrectly(false);
+	*/
+	
+
+    
+	
+/*	 if(FString UserName; ResponseObj->TryGetStringField(USERNAME,UserName ))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FOUND:: %s"),*UserName)
+		HueBridgeConfig.UserName = UserName;
+		
+	} */
+	
+	
 }
 
 /**
  * @brief Callback for HUE API Response for if user exist yet or not on huebridge
- * @param Request Signature for callback
- * @param Response Signature for callback
- * @param bWasSuccessful Signature for callback
+ * @param Request Signature for callback 
+ * @param Response Signature for callback 
+ * @param bWasSuccessful Signature for callback 
  */
 void AHueBridge::OnResponseReceivedUserExist(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
 {
 	FString Data = Response->GetContentAsString();
-	if (Data.Contains(HueBridgeConfig.UserName))
+	if(Data.Contains(HueBridgeConfig.UserName))
 	{
 		bUserExist = true;
 	}
@@ -209,7 +221,7 @@ void AHueBridge::OnResponseReceivedUserExist(FHttpRequestPtr Request, FHttpRespo
  */
 bool AHueBridge::CheckIfBusy()
 {
-	if (bInUse)
+	if(bInUse)
 	{
 		PleaseWaitingForBridgeRespond();
 		RequestsBusy.Broadcast();
@@ -224,15 +236,15 @@ bool AHueBridge::CheckIfBusy()
  * @param JsonObject Jsonobject to be used FJsonObject
  * @param LightInfoOut Flightinfo struct out param to be filled FLightInfo
  */
-void  AHueBridge::GetLightInfo(TSharedPtr<FJsonObject> JsonObject, FLightInfo& LightInfoOut)
+void  AHueBridge::GetLightInfo(TSharedPtr<FJsonObject> JsonObject,  FLightInfo& LightInfoOut)
 {
 	LightInfoOut.Name = JsonObject->GetStringField("LightName");
 	LightInfoOut.bUseLight = JsonObject->GetBoolField("bUseLight");
 }
 
 /**
- * @brief Converts JasonObject data to a string
- * @param JsonObject
+ * @brief Converts JasonObject data to a string 
+ * @param JsonObject 
  * @param Field Name of json field to used as a string
  * @param NameOut String that is used for Out param to be filled
  */
@@ -242,7 +254,7 @@ void AHueBridge::GetStringName(TSharedPtr<FJsonObject> JsonObject, const FString
 }
 
 /**
- * @brief Set if our user has been configured properly, use to broadcast for UI elements
+ * @brief Set if our user has been configured properly, use to broadcast for UI elements 
  * @param Value Bool if used is configured properly
  */
 void AHueBridge::UserConfiguredCorrectly(bool Value)
@@ -253,18 +265,18 @@ void AHueBridge::UserConfiguredCorrectly(bool Value)
 
 /**
  * @brief Creates REST API call to the Hue bridge too find all lamp connected to the bridge. User needs to be created
- * in order to find all lamps
+ * in order to find all lamps 
  */
 void AHueBridge::DiscoverLamps()
 {
-	if (CheckIfBusy())
+	if(CheckIfBusy())
 	{
 		return;
 	}
 	//Setup HTTP REST CALL and Completed Request Delegate 
 	const TSharedRef<IHttpRequest> Request = HTTPHandler->Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &AHueBridge::OnResponseReceivedDiscover);
-	const FString URL = TEXT("http://") +
+	const FString URL = TEXT("http://")+
 		HueBridgeConfig.HostName +
 		TEXT("/api/") + HueBridgeConfig.UserName +
 		TEXT("/lights");
@@ -277,7 +289,7 @@ void AHueBridge::DiscoverLamps()
 	FString RequestBody;
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
 	FJsonSerializer::Serialize(RequestOBJ, Writer);
-
+	
 	Request->SetURL(URL);
 	Request->SetVerb(VERB_GET);
 	Request->SetHeader("Content-Type", TEXT("application/json"));
@@ -291,16 +303,16 @@ void AHueBridge::DiscoverLamps()
  */
 void AHueBridge::HueBridgeSetupTimer()
 {
-	if (GetWorldTimerManager().IsTimerActive(LinkBridgeTimer))
+	if(GetWorldTimerManager().IsTimerActive(LinkBridgeTimer))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Hue Bridge Link already being requested"));
+		UE_LOG(LogTemp, Warning, TEXT("Hue Bridge Link already being requested"));	
 		return;
 	}
 	GetWorld()->GetTimerManager().ClearTimer(LinkBridgeTimer);
-	GetWorld()->GetTimerManager().SetTimer(LinkBridgeTimer, this, &AHueBridge::SetupNewUser, DelayTimerForBridgePress, false);
+	GetWorld()->GetTimerManager().SetTimer(LinkBridgeTimer, this, &AHueBridge::SetupNewUser,DelayTimerForBridgePress, false);
 	RequestUser.Broadcast(DelayTimerForBridgePress);
 	HueBringTimerStarted_Implementation(DelayTimerForBridgePress);
-
+	
 }
 
 /**
@@ -309,18 +321,18 @@ void AHueBridge::HueBridgeSetupTimer()
 void AHueBridge::SetupNewUser()
 {
 	GetWorld()->GetTimerManager().ClearTimer(LinkBridgeTimer);
-	if (CheckIfBusy())
+	if(CheckIfBusy())
 	{
 		return;
 	}
-
+	
 	//Setup HTTP REST CALL and Completed Request Delegate 
 	const TSharedRef<IHttpRequest> Request = HTTPHandler->Get().CreateRequest();
 	Request->OnProcessRequestComplete().BindUObject(this, &AHueBridge::OnResponseReceivedNewUser);
 	const FString URL = TEXT("http://") +
 		HueBridgeConfig.HostName +
 		TEXT("/api");
-
+	
 	//Fill out JSON DATA
 	TSharedRef<FJsonObject> RequestOBJ = MakeShared<FJsonObject>();
 	RequestOBJ->SetStringField(TEXT("devicetype"), HueBridgeConfig.AppName);
@@ -330,14 +342,14 @@ void AHueBridge::SetupNewUser()
 	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
 	FJsonSerializer::Serialize(RequestOBJ, Writer);
 
-	Request->SetURL(URL);
+	Request->SetURL(URL); 
 	Request->SetVerb(VERB_POST);
 	Request->SetHeader("Content-Type", TEXT("application/json"));
 	Request->SetContentAsString(RequestBody);
 	Request->ProcessRequest();
 	bInUse = true;
-
-
+	
+	
 }
 
 /**
@@ -346,9 +358,9 @@ void AHueBridge::SetupNewUser()
 void AHueBridge::SaveConfig()
 {
 	SaveWarning.Broadcast();
-	for (const auto& Element : HueLamps)
+	for (const auto&  Element: HueLamps)
 	{
-
+ 
 		FLightUse Light;
 		Light.LightName = Element.Key;
 		Light.bUseLight = HueLamps[Element.Key]->LampToBeUsed();
@@ -358,9 +370,9 @@ void AHueBridge::SaveConfig()
 	//Write Data out to file in JSON format 
 	FString JsonData;
 	FJsonObjectConverter::UStructToJsonObjectString(HueBridgeConfig, JsonData);
-	FFileHelper::SaveStringToFile(*JsonData, *(FPaths::ProjectContentDir() + CONFIG_FILE));
+	FFileHelper::SaveStringToFile(*JsonData, *(FPaths::ProjectContentDir()+CONFIG_FILE));
 	UE_LOG(LogTemp, Warning, TEXT("HueConfig SAVED!"));
-
+	
 }
 
 /**
@@ -371,34 +383,34 @@ void AHueBridge::LoadConfig()
 
 	//Load in Data from JSON file
 	FString JsonData;
-	FFileHelper::LoadFileToString(JsonData, *(FPaths::ProjectContentDir() + CONFIG_FILE));
+	FFileHelper::LoadFileToString(JsonData, *(FPaths::ProjectContentDir()+CONFIG_FILE));
 	const TSharedRef<TJsonReader<TCHAR>> JsonReader = TJsonReaderFactory<TCHAR>::Create(JsonData);
 	TSharedPtr<FJsonObject> JsonObject = MakeShareable(new FJsonObject());
 
-	if (FJsonSerializer::Deserialize(JsonReader, JsonObject) && JsonObject.IsValid())
+	if(FJsonSerializer::Deserialize(JsonReader,JsonObject) && JsonObject.IsValid())
 	{
 		//Setup our Config Data
 		HueBridgeConfig.HostName = JsonObject->GetStringField("HostName");
 		HueBridgeConfig.UserName = JsonObject->GetStringField("UserName");
-		TArray<TSharedPtr<FJsonValue>> LightsJson = JsonObject->GetArrayField("Lights");
-
+		TArray<TSharedPtr<FJsonValue>> LightsJson =  JsonObject->GetArrayField("Lights");
+		
 		//Setup all our Hue Lamps
 		DiscoverLamps();
 		for (const auto& Element : LightsJson)
 		{
 			FLightInfo Info;
 			GetLightInfo(Element->AsObject(), Info);
-			if (HueLamps.Contains(Info.Name))
+			if(HueLamps.Contains(Info.Name))
 			{
 				HueLamps[Info.Name]->UseLampLight(Info.bUseLight);
 			}
 		}
-
-		UE_LOG(LogTemp, Warning, TEXT("HueConfig LOADED!"));
+	
+		UE_LOG(LogTemp, Warning, TEXT("HueConfig LOADED!"));	
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("HueConfig Not Found Creating New Save Config"));
+		UE_LOG(LogTemp, Warning, TEXT("HueConfig Not Found Creating New Save Config"));	
 		SaveConfig();
 	}
 }
@@ -410,12 +422,12 @@ void AHueBridge::LoadConfig()
  */
 AHueLamp* AHueBridge::GetLamp(const FString& LampName)
 {
-	if (HueLamps.Contains(LampName))
+	if(HueLamps.Contains(LampName))
 	{
 		return HueLamps[LampName];
 	}
 	return nullptr;
-
+	
 }
 
 /**
@@ -430,7 +442,7 @@ bool AHueBridge::DoesHueUserExist()
 	const FString URL = TEXT("http://") +
 		HueBridgeConfig.HostName +
 		TEXT("/api/");
-
+	
 	//Fill out JSON DATA
 	TSharedRef<FJsonObject> RequestOBJ = MakeShared<FJsonObject>();
 	RequestOBJ->SetStringField(TEXT("devicetype"), HueBridgeConfig.AppName);
@@ -447,7 +459,7 @@ bool AHueBridge::DoesHueUserExist()
 	Request->ProcessRequest();
 	bInUse = true;
 	return bUserExist;
-
+	
 }
 
 /**
@@ -455,10 +467,10 @@ bool AHueBridge::DoesHueUserExist()
  */
 void AHueBridge::ClearOutLights()
 {
-	for (const auto& Element : HueLamps)
+	for (const auto&  Element: HueLamps)
 	{
 		FString Key = Element.Key;
-		if (HueLamps.Contains(Key))
+		if(HueLamps.Contains(Key))
 		{
 			AHueLamp* Lamp = GetLamp(Key);
 			Lamp->Delete();
