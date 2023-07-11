@@ -26,7 +26,8 @@ public:
 protected:
 	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
-	
+
+	//Blueprint exposed variables 
 	UPROPERTY(BlueprintGetter = CheckInUse, Category = "Hue Light")
 		bool bUseLamp = true;
 	
@@ -41,15 +42,17 @@ protected:
 	
 	FString DevicePath;
 	FString DeviceKey;
-
+	FColor LampColor;
+	FColor StartColor;
 	
 	FVector CovertRGBToHSV(const FColor &RGB);
-	
+	FColor ConvertHSVToRGB( int32 Hue,  int32 Saturation,  int32 Brightness);
 	virtual void CreateRequestBrightness(int32 Bri);
 	virtual void CreateRequestColor(const FVector &HSV);
 	virtual void CreateRequestTurnLightOnOff(bool bTurnOn);
 
 	virtual void OnResponseTest( FHttpRequestPtr Request,  FHttpResponsePtr Response, bool bWasSuccessful);
+	virtual void OnResponseReceivedGetLightColor( FHttpRequestPtr Request,  FHttpResponsePtr Response, bool bWasSuccessful);
 public:
 	
 	// Called every frame
@@ -57,6 +60,9 @@ public:
 	
 	virtual void SetupLamp(const FString &Path, const FString &Key, const FString &Name);
 	virtual void Delete(){Destroy();}
+
+	UFUNCTION(BlueprintCallable, Category = "Hue Light" )
+		virtual	void GetLightColor();
 	
 	UFUNCTION(BlueprintCallable, Category = "Hue Light")
 		virtual void TurnLightOnOff(bool bTurnOn);
@@ -81,4 +87,7 @@ public:
 	
 	UFUNCTION(BlueprintPure, Category = "Hue Light")
 		virtual FString& GetLampName(){return LampName;}
+	
+	UFUNCTION(BlueprintPure, Category = "Hue Light")
+		virtual FColor GetLampColor(){return LampColor;}
 };

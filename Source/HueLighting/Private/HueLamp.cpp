@@ -3,12 +3,14 @@ MIT License Modified See LICENSE Files for more details
 Copyright (c) 2022 Scott Tongue all rights reversed 
 */
 #include "HueLamp.h"
-
 #include "HttpModule.h"
+#include "HueBridge.h"
 #include "Dom/JsonObject.h"
 #include "Interfaces/IHttpRequest.h"
 #include "Interfaces/IHttpResponse.h"
 #include "Serialization/JsonSerializer.h"
+#include "Kismet/KismetMathLibrary.h"
+#include "Math/Color.h"
 
 const static FString VERB_PUT = TEXT("PUT");
 
@@ -76,6 +78,15 @@ FVector AHueLamp::CovertRGBToHSV(const FColor &RGB)
 	}
 	
 	return  FVector(Hue, Saturation, Brightness);;
+}
+
+FColor AHueLamp::ConvertHSVToRGB( int32 Hue,  int32 Saturation,  int32 Brightness)
+{
+	FColor RGB;
+	return RGB;
+	
+
+	
 }
 
 /**
@@ -193,6 +204,26 @@ void AHueLamp::OnResponseTest(FHttpRequestPtr Request, FHttpResponsePtr Response
 	UE_LOG(LogTemp, Warning, TEXT("%s"),*Data);
 }
 
+void AHueLamp::OnResponseReceivedGetLightColor(FHttpRequestPtr Request, FHttpResponsePtr Response, bool bWasSuccessful)
+{
+	const FString Data = Response->GetContentAsString();
+	
+	TSharedPtr<FJsonObject> ResponseObj = MakeShareable(new FJsonObject);
+	const TSharedRef<TJsonReader<>> JsonReader = TJsonReaderFactory<>::Create(Response->GetContentAsString());
+		
+	if(! FJsonSerializer::Deserialize(JsonReader, ResponseObj))
+	{
+			UE_LOG(LogTemp, Warning, TEXT("FAILED TO Deserialize %s Get Color"), *LampName);
+	}
+	else
+	{
+		int32 Bri = ResponseObj->GetNumberField(TEXT("bri"));
+		int32 Hue = ResponseObj->GetNumberField(TEXT("hue"));
+		int32 Sat = ResponseObj->GetNumberField(TEXT("sat"));
+	}
+	bInUse =false;
+}
+
 
 // Called every frame
 void AHueLamp::Tick(float DeltaTime)
@@ -213,6 +244,33 @@ void AHueLamp::SetupLamp(const FString& Path, const FString& Key,const FString &
 	DeviceKey = Key;
 	LampName = Name;
 	bHasBeenConfigured =true;
+}
+/**
+ * @brief Get Light Color the lamp is currently set to 
+ */
+void AHueLamp::GetLightColor()
+{
+	if(CheckInUse())
+		return;
+
+	bInUse = true;
+	//Setup HTTP REST CALL and Completed Request Delegate 
+	const TSharedRef<IHttpRequest> Request = HTTPHandler->Get().CreateRequest();
+	Request->OnProcessRequestComplete().BindUObject(this, &AHueLamp::OnResponseReceivedGetLightColor);
+	const FString URL = DevicePath;
+	
+	TSharedRef<FJsonObject> RequestOBJ = MakeShared<FJsonObject>();
+
+	//Serialize Data
+	FString RequestBody;
+	const TSharedRef<TJsonWriter<>> Writer = TJsonWriterFactory<>::Create(&RequestBody);
+	FJsonSerializer::Serialize(RequestOBJ, Writer);
+	
+	Request->SetURL(URL);
+	Request->SetVerb(VERB_GET);
+	Request->SetHeader("Content-Type", TEXT("application/json"));
+	Request->ProcessRequest();
+	
 }
 
 /**

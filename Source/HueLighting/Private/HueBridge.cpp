@@ -10,14 +10,7 @@ Copyright (c) 2022 Scott Tongue all rights reversed
 #include "Interfaces/IHttpResponse.h"
 #include "Misc/FileHelper.h"
 
-//const FSTRING names 
-const static FString CONFIG_FILE= TEXT("/Config/HueConfig.json");
-const static FString VERB_GET = TEXT("GET");
-const static FString VERB_POST = TEXT("POST");
-const static FString TYPE = TEXT("type");
-const static FString STATE = TEXT("/state");
-const static FString USERNAME = TEXT("username");
-const static FString NAME = TEXT("name");
+
 // Sets default values
 AHueBridge::AHueBridge()
 {
