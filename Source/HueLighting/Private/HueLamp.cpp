@@ -256,7 +256,7 @@ void AHueLamp::GetLightColor()
 	bInUse = true;
 	//Setup HTTP REST CALL and Completed Request Delegate 
 	const TSharedRef<IHttpRequest> Request = HTTPHandler->Get().CreateRequest();
-	Request->OnProcessRequestComplete().BindUObject(this, &AHueLamp::OnResponseReceivedGetLightColor);
+//	Request->OnProcessRequestComplete().BindUObject(this, &AHueLamp::OnResponseReceivedGetLightColor);
 	const FString URL = DevicePath;
 	
 	TSharedRef<FJsonObject> RequestOBJ = MakeShared<FJsonObject>();

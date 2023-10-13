@@ -7,7 +7,6 @@ Copyright (c) 2022 Scott Tongue all rights reversed
 
 #include "CoreMinimal.h"
 #include "HueLamp.h"
-
 #include "GameFramework/Actor.h"
 #include "Interfaces/IHttpRequest.h"
 #include "HueBridge.generated.h"
